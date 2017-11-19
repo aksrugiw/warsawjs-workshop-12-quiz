@@ -26,7 +26,6 @@
           </v-flex>
           <v-flex md6>
             <add-question @newquestion="addNewQuestion($event)"></add-question>
-              
           </v-flex>
         </v-layout>
       </v-container>
@@ -47,7 +46,13 @@ export default {
       currentQuestionIndex: 0,
       userAnswer: null,
       hasUserWon: false,
-      mynewQuestion: {}
+      mynewQuestion: {},
+      mySelect: null,
+      myItems: [
+        {value: 0, text: 'raz'},
+        {value: 1, text: 'dwa'},
+        {value: 2, text: 'trzy'}
+      ]
     }
   },
   computed: {
@@ -81,6 +86,48 @@ export default {
       this.userAnswer = null
       this.currentQuestionIndex++
     }
+  },
+  created () {
+    function shuffle(array) {
+      var currentIndex = array.length, temporaryValue, randomIndex;
+
+      // While there remain elements to shuffle...
+      while (0 !== currentIndex) {
+
+        // Pick a remaining element...
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex -= 1;
+
+        // And swap it with the current element.
+        temporaryValue = array[currentIndex];
+        array[currentIndex] = array[randomIndex];
+        array[randomIndex] = temporaryValue;
+      }
+
+      return array;
+    }
+    function getCorrectIndex(correctAnswer, array) {
+      let currentIndex = array.length
+      while (0 !== currentIndex) {
+        if(array[currentIndex] === correctAnswer) {
+          return currentIndex
+        }
+        currentIndex--
+      }
+    }
+    this.$http.get('https://opentdb.com/api.php?amount=10').then(res => {
+      let data = res.body.results
+      console.log(data)
+      this.quiz = data.map(item => {
+        let tempAnswers = shuffle([...item.incorrect_answers, item.correct_answer])
+        
+        return {
+          title: item.question,
+          answers: tempAnswers,
+          correctAnswerIndex: getCorrectIndex(item.correct_answer, tempAnswers)
+        }
+      })
+    })
   }
 }
 </script>
